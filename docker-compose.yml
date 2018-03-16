@@ -1,0 +1,58 @@
+version: '3.3'
+
+services:
+  db:
+    image: api_gateway:db
+    env_file: .env
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+      args:
+        - API_GATEWAY_DB=${API_GATEWAY_DB}
+        - API_GATEWAY_DB_ROLE=${API_GATEWAY_DB_ROLE}
+        - API_GATEWAY_DB_PASSWORD=${API_GATEWAY_DB_PASSWORD}
+    environment:
+      - POSTGRES_USER=${API_GATEWAY_DB_ROLE}
+      - POSTGRES_PASSWORD=${API_GATEWAY_DB_PASSWORD}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
+  app:
+    image: api_gateway:app
+    env_file: .env
+    environment:
+      - RACK_ENV=development
+      - RAILS_ENV=development
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+      args:
+        - API_GATEWAY_DB_ROLE=${API_GATEWAY_DB_ROLE}
+        - API_GATEWAY_DB_PASSWORD=${API_GATEWAY_DB_PASSWORD}
+        - API_GATEWAY_DB_HOST=${API_GATEWAY_DB_HOST}
+        - API_GATEWAY_SECRET_KEY_BASE=${API_GATEWAY_SECRET_KEY_BASE}
+    command: bundle exec puma -C config/puma.rb
+    expose:
+      - '3000'
+    volumes:
+      - .:/api_gateway
+    depends_on:
+      - db
+
+  proxy:
+    image: api_gateway:proxy
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    depends_on:
+      - app
+    links:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./log:/var/www/api_gateway/log

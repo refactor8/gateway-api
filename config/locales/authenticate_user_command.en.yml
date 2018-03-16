@@ -1,0 +1,10 @@
+en:
+  authenticate_user_command:
+    credentials:
+      invalid: "Invalid email or password!"
+    email:
+      blank: "Please enter an email address"
+    password:
+      blank: "Please enter a password"
+    store:
+      blank: "Please enter a store name"

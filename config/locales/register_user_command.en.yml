@@ -1,0 +1,5 @@
+en:
+  register_user_command:
+    email: "Please enter a valid email address"
+    password: "Please enter a password"
+    subdomain: "Subdomain can't be blank"

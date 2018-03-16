@@ -1,0 +1,66 @@
+# Base image:
+FROM nginx
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install dependencies
+RUN apt-get update -qq && apt-get -y install apache2-utils openssl
+
+# Establish where Nginx should look for files
+ENV RAILS_ROOT /var/www/api_gateway
+
+# Set our working directory inside the image
+WORKDIR $RAILS_ROOT
+
+# Create log directory
+RUN mkdir log
+
+# Copy over static assets
+#COPY public public/
+
+# Create ssl directory
+RUN mkdir -p /tmp/ssl
+
+COPY ./config/ssl/client.cnf /tmp/ssl/client.cnf
+COPY ./config/ssl/server.cnf /tmp/ssl/server.cnf
+
+# Generate ssl certs
+RUN openssl genrsa -out /tmp/ssl/ca-key.pem 2048
+RUN openssl req -x509 -new -nodes -key /tmp/ssl/ca-key.pem \
+    -days 10000 -out /tmp/ssl/ca.pem -subj '/CN=refactor8-CA'
+
+# Create and sign a client certificate
+RUN openssl genrsa -out /tmp/ssl/client-key.pem 2048
+
+RUN openssl req -new -key /tmp/ssl/client-key.pem -out /tmp/ssl/cert.csr \
+    -subj '/CN=refactor8-client' -config /tmp/ssl/client.cnf
+
+RUN openssl x509 -req -in /tmp/ssl/cert.csr -CA /tmp/ssl/ca.pem \
+    -CAkey /tmp/ssl/ca-key.pem -CAcreateserial \
+    -out /tmp/ssl/cert.pem -days 365 -extensions v3_req \
+    -extfile /tmp/ssl/client.cnf
+
+# Create and sign a server certificate
+RUN openssl genrsa -out /tmp/ssl/server-key.pem 2048
+RUN openssl req -new -key /tmp/ssl/server-key.pem \
+    -out /tmp/ssl/cert.csr \
+    -subj '/CN=refactor8-server' -config /tmp/ssl/server.cnf
+
+RUN openssl x509 -req -in /tmp/ssl/cert.csr -CA /tmp/ssl/ca.pem \
+    -CAkey /tmp/ssl/ca-key.pem -CAcreateserial \
+    -out /tmp/ssl/cert.pem -days 365 -extensions v3_req \
+    -extfile /tmp/ssl/server.cnf
+
+# Copy Nginx config template
+COPY config/nginx/nginx.conf /tmp/api_gateway.nginx
+
+# Substitute variable references in the Nginx config template for real
+# put the final config in its place
+RUN envsubst '$RAILS_ROOT' < /tmp/api_gateway.nginx > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+EXPOSE 443
+
+VOLUME /var/www/api_gateway/log/
+
+# Use the "exec form of CMD so Nginx shuts down gracefully on SIGTERM (i.e. `docker stop`)"
+CMD [ "nginx", "-g", "daemon off;" ]

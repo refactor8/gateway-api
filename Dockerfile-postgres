@@ -1,0 +1,40 @@
+FROM ubuntu:16.04
+
+ARG API_GATEWAY_DB_ROLE
+ARG API_GATEWAY_DB_PASSWORD
+ARG API_GATEWAY_DB
+ARG API_GATEWAY_DB_PORT
+
+ENV API_GATEWAY_DB_ROLE=$API_GATEWAY_DB_ROLE
+ENV API_GATEWAY_DB_PASSWORD=$API_GATEWAY_DB_PASSWORD
+ENV API_GATEWAY_DB=$API_GATEWAY_DB
+ENV API_GATEWAY_DB_PORT=$API_GATEWAY_DB_PORT
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update && apt-get install -y \
+  apt-utils \
+  debconf \
+  python-software-properties \
+  software-properties-common \
+  postgresql-9.6 \
+  postgresql-client-9.6 \
+  postgresql-contrib-9.6
+
+USER postgres
+
+RUN /etc/init.d/postgresql start &&\
+    psql --command "CREATE USER $API_GATEWAY_DB_ROLE WITH SUPERUSER PASSWORD '$API_GATEWAY_DB_PASSWORD';" &&\
+    createdb -O $API_GATEWAY_DB_ROLE $API_GATEWAY_DB
+
+#         TYPE    DATABASE    USER      ADDRESS       METHOD
+RUN echo "host    all         all       0.0.0.0/0     md5" >> /etc/postgresql/9.6/main/pg_hba.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/9.6/main/postgresql.conf
+
+EXPOSE $API_GATEWAY_DB_PORT
+
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+
+CMD ["/usr/lib/postgresql/9.6/bin/postgres", "-D", "/var/lib/postgresql/9.6/main", "-c", "config_file=/etc/postgresql/9.6/main/postgresql.conf"]

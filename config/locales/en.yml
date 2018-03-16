@@ -1,0 +1,21 @@
+en:
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            email:
+              blank: "Please enter your email address"
+              taken: "This email already exists"
+              invalid: "Please enter a valid email address"
+            password:
+              blank: "Please enter a password"
+              too_short: "Your password is too short (minimum is 8 characters)"
+              too_long: "Your password is too long (maximum is 32 characters)"
+        account:
+          attributes:
+            subdomain:
+              blank: "Please enter a store name"
+              lenght: "Your store name is too short (minimum is 4 characters)"
+              invalid: "Your store name must only contain lowercase letters, numbers, and dashes (not as a starting or ending character)"
+              taken: "A store with that name already exists"
