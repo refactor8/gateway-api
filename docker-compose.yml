@@ -41,6 +41,8 @@ services:
       - .:/api_gateway
     depends_on:
       - db
+    links:
+      - db
 
   proxy:
     image: api_gateway:proxy

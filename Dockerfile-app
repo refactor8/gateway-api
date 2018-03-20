@@ -1,5 +1,5 @@
 # Base image:
-FROM ruby:2.5.0
+FROM ruby:2.4.2
 
 ARG API_GATEWAY_DB_ROLE
 ARG API_GATEWAY_DB_HOST
@@ -11,23 +11,20 @@ ENV API_GATEWAY_DB_ROLE=$API_GATEWAY_DB_ROLE
 ENV API_GATEWAY_DB_HOST=$API_GATEWAY_DB_HOST
 ENV API_GATEWAY_DB_PASSWORD=$API_GATEWAY_DB_PASSWORD
 ENV API_GATEWAY_SECRET_KEY=$API_GATEWAY_SECRET_KEY
-ENV API_GATEWAY_NAME=$API_GATEWAY_NAME
-
-ENV DEBIAN_FRONTEND noninteractive
 
 # Install dependencies
 RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs
 
 RUN mkdir /api_gateway
-WORKDIR /$api_gateway
+WORKDIR /api_gateway
 
 # Gems:
 COPY . .
-RUN gem install bundler --pre && bundle install --jobs 20 --retry 5
+RUN gem install bundler && bundle install --jobs 20 --retry 5
 
 # Copy the main application.
 
-EXPOSE 3001
+EXPOSE 3000
 
 COPY docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
