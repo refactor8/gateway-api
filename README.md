@@ -46,11 +46,7 @@ API_GATEWAY_DB_PORT
 ```
 The PostgreSQL database port
 
-## Running the example
-
-Once you've set the environment variables, run ```bundle install```, then run ```rails server```.
-
-## Running the example using Docker
+## Running the gateway service
 
 Run the containers
 
