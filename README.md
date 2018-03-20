@@ -28,7 +28,7 @@ The database name
 ```shell
 API_GATEWAY_DB_ROLE
 ```
-The postgres role
+Database role
 ```shell
 API_GATEWAY_DB_PASSWORD
 ```
@@ -36,7 +36,7 @@ The password for the user set in the API_GATEWAY_DB_ROLE environment variable
 ```shell
 API_GATEWAY_SECRET_KEY_BASE
 ```
-The application secret key value found in config/secrets.ym. Rails provides ```rake secret``` for just this purpose.
+The application secret key value found in config/secrets.yml. Rails provides ```rake secret``` for just this purpose.
 ```shell
 API_GATEWAY_DB_HOST
 ```
